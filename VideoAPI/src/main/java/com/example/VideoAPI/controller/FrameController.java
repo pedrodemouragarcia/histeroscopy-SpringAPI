@@ -157,6 +157,20 @@ public class FrameController {
         }
     }
 
+
+    @PostMapping("/calculateNeighborsByMatchSingle")
+    public ResponseEntity<Frame> getNeighborsByMatchSingle(@RequestBody Frame request) {
+        List<Frame> frames = frameRepository.findByPath(request.getPath());
+        if (Objects.nonNull(frames) && !frames.isEmpty()) {
+            Frame frame = frames.iterator().next();
+                if (Objects.nonNull(frame)) {
+                    List<Frame> neighbors = frameRepository.findAll();
+                    defineNeighborsByMatches(frame, neighbors);
+                }
+            }
+            return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public void defineNeighbors(Frame centralFrame, List<Frame> allNeighbors) {
         defineCircleNeighbors(centralFrame, allNeighbors);
         defineXSpaceNeighbors(centralFrame, allNeighbors);

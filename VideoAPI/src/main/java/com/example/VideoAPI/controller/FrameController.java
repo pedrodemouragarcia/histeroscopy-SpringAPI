@@ -158,6 +158,33 @@ public class FrameController {
     }
 
 
+    @GetMapping("/calculateNextTimeFrames")
+    public ResponseEntity<Frame> getNeighborsByNextTime() {
+        List<Frame> frames = frameRepository.findAll();
+        if (Objects.nonNull(frames) && !frames.isEmpty()) {
+            List<Frame> framesCopy = new CopyOnWriteArrayList<>(frames);
+            Iterator<Frame> iterator = framesCopy.iterator();
+            Frame frame;
+            while (iterator.hasNext()) {
+                frame = iterator.next();
+                if (Objects.nonNull(frame)) {
+                    System.out.println("Iniciando frame: " + frame.getPath() + " ...");
+                    Instant start = Instant.now();
+                    calculateNextTimeFrame(frame);
+                    frameRepository.save(frame);
+                    Instant endCircle = Instant.now();
+                    Duration timeElapsed = Duration.between(start, endCircle);
+                    System.out.println("Finalizado frame: " + frame.getPath() + " - Tempo:  " + timeElapsed.toSeconds() + " segundos");
+
+                }
+            }
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+    }
+
+
     @PostMapping("/calculateNeighborsByMatchSingle")
     public ResponseEntity<Frame> getNeighborsByMatchSingle(@RequestBody Frame request) {
         List<Frame> frames = frameRepository.findByPath(request.getPath());
@@ -563,5 +590,42 @@ public class FrameController {
                         && centralFrame.getAnguloX().compareTo(f.getAnguloX()) == 0//
                         && centralFrame.getAnguloY().compareTo(f.getAnguloY()) == 0)//
                 .collect(Collectors.toList());
+    }
+
+    public void calculateNextTimeFrame(Frame frame){
+        List<Frame> framesMesmaPosicao = frameRepository.findByPosicaoXAndPosicaoYAndPosicaoZAndAnguloXAndAnguloY(frame.getPosicaoX(),frame.getPosicaoY(),frame.getPosicaoZ(),frame.getAnguloX(),frame.getAnguloY());
+        framesMesmaPosicao.sort(Comparator.comparing(Frame::getTime));
+        Frame next = null;
+        Iterator<Frame> frameIterator = framesMesmaPosicao.iterator();
+        while (frameIterator.hasNext()){
+            Frame control = frameIterator.next();
+            if(control.getPath().equalsIgnoreCase(frame.getPath()) && frameIterator.hasNext()){
+             next = frameIterator.next();
+             break;
+            }
+        }
+
+        if(Objects.isNull(next) || !( next.getTime() - frame.getTime() == 1)){
+
+            List<Frame> frames = framesMesmaPosicao.stream()//
+             .filter(f -> !(f.getTime() - frame.getTime() == 1)//
+                      && !(f.getTime() - frame.getTime() == -1))//
+             .collect(Collectors.toList());
+
+            SIFT featureDetector = SIFT.create();
+            String image = DescriptorCalculator.MAIN_FOLDER.concat(frame.getPath()).concat(".png");
+            Mat objectImage = Imgcodecs.imread(image, Imgcodecs.IMREAD_COLOR);
+            MatOfKeyPoint objectKeyPoints = new MatOfKeyPoint();
+            featureDetector.detect(objectImage, objectKeyPoints);
+            MatOfKeyPoint centralFrameDescriptors = new MatOfKeyPoint();
+            featureDetector.compute(objectImage, objectKeyPoints, centralFrameDescriptors);
+
+             next = getFrameBestMatch(frame, frames, featureDetector, centralFrameDescriptors);
+        }
+
+        if(Objects.nonNull(next)) {
+            frame.setNextTimeFrame(next.getPath());
+        }
+
     }
 }

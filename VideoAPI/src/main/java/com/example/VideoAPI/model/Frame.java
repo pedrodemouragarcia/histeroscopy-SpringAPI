@@ -47,6 +47,8 @@ public class Frame {
     private String frontSpaceNeighbor;
     private String backSpaceNeighbor;
 
+    private String nextTimeFrame;
+
     @Transient
     private Integer matches;
 
@@ -248,5 +250,13 @@ public class Frame {
 
     public void setBackSpaceNeighbor(String backSpaceNeighbor) {
         this.backSpaceNeighbor = backSpaceNeighbor;
+    }
+
+    public String getNextTimeFrame() {
+        return nextTimeFrame;
+    }
+
+    public void setNextTimeFrame(String nextTimeFrame) {
+        this.nextTimeFrame = nextTimeFrame;
     }
 }

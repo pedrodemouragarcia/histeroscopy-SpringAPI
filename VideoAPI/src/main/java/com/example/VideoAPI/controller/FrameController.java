@@ -380,7 +380,7 @@ public class FrameController {
             if (Objects.nonNull(neighbor)) {
                 List<Frame> rightAngleNeighbors = getPossibleCircleNeighborsFinalAngle(neighbors, neighbor);
                 if (!rightAngleNeighbors.isEmpty()) {
-                    return getFrameBestMatch(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
+                    return getFrameBestMatch(centralFrame, rightAngleNeighbors, featureDetector, centralFrameDescriptors);
                 }
             }
         }

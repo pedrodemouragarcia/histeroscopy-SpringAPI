@@ -184,6 +184,26 @@ public class FrameController {
         }
     }
 
+    @GetMapping("/calculateNextTimeFrame")
+    public ResponseEntity<Frame> getNeighborByNextTime(@RequestBody Frame frame) {
+        List<Frame> frames = frameRepository.findByPath(frame.getPath());
+        if (!frames.isEmpty()) {
+            Frame result = frames.iterator().next();
+        if (Objects.nonNull(result)) {
+
+                    System.out.println("Iniciando frame: " + frame.getPath() + " ...");
+                    Instant start = Instant.now();
+                    calculateNextTimeFrame(result);
+                    frameRepository.save(result);
+                    Instant endCircle = Instant.now();
+                    Duration timeElapsed = Duration.between(start, endCircle);
+                    System.out.println("Finalizado frame: " + frame.getPath() + " - Tempo:  " + timeElapsed.toSeconds() + " segundos");
+                }
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+    }
 
     @PostMapping("/calculateNeighborsByMatchSingle")
     public ResponseEntity<Frame> getNeighborsByMatchSingle(@RequestBody Frame request) {
@@ -595,6 +615,11 @@ public class FrameController {
     public void calculateNextTimeFrame(Frame frame){
         List<Frame> framesMesmaPosicao = frameRepository.findByPosicaoXAndPosicaoYAndPosicaoZAndAnguloXAndAnguloY(frame.getPosicaoX(),frame.getPosicaoY(),frame.getPosicaoZ(),frame.getAnguloX(),frame.getAnguloY());
         framesMesmaPosicao.sort(Comparator.comparing(Frame::getTime));
+
+        for(Frame fraMP : framesMesmaPosicao){
+            System.out.println(fraMP.getTime() + " - " +  fraMP.getPath());
+        }
+
         Frame next = null;
         Iterator<Frame> frameIterator = framesMesmaPosicao.iterator();
         while (frameIterator.hasNext()){
@@ -608,9 +633,10 @@ public class FrameController {
         if(Objects.isNull(next) || !( next.getTime() - frame.getTime() == 1)){
 
             List<Frame> frames = framesMesmaPosicao.stream()//
-             .filter(f -> !(f.getTime() - frame.getTime() == 1)//
-                      && !(f.getTime() - frame.getTime() == -1))//
+             .filter(f -> (f.getTime() > frame.getTime()))//
+                      //&& !(f.getTime() - frame.getTime() == -1))//
              .collect(Collectors.toList());
+
 
             SIFT featureDetector = SIFT.create();
             String image = DescriptorCalculator.MAIN_FOLDER.concat(frame.getPath()).concat(".png");
@@ -620,7 +646,12 @@ public class FrameController {
             MatOfKeyPoint centralFrameDescriptors = new MatOfKeyPoint();
             featureDetector.compute(objectImage, objectKeyPoints, centralFrameDescriptors);
 
-             next = getFrameBestMatch(frame, frames, featureDetector, centralFrameDescriptors);
+
+            if(!frames.isEmpty()) {
+                next = getFrameBestMatch(frame, frames, featureDetector, centralFrameDescriptors);
+            }else {
+                next = getFrameBestMatch(frame, framesMesmaPosicao, featureDetector, centralFrameDescriptors);
+            }
         }
 
         if(Objects.nonNull(next)) {

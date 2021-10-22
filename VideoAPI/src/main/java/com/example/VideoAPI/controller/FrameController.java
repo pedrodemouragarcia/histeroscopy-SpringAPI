@@ -174,7 +174,7 @@ public class FrameController {
                     frameRepository.save(frame);
                     Instant endCircle = Instant.now();
                     Duration timeElapsed = Duration.between(start, endCircle);
-                    System.out.println("Finalizado frame: " + frame.getPath() + " - Tempo:  " + timeElapsed.toSeconds() + " segundos");
+                    System.out.println("Finalizado frame: " + frame.getPath() + " - Tempo:  " + timeElapsed.toSeconds() + " segundos - Next: " + frame.getNextTimeFrame());
 
                 }
             }
@@ -189,16 +189,16 @@ public class FrameController {
         List<Frame> frames = frameRepository.findByPath(frame.getPath());
         if (!frames.isEmpty()) {
             Frame result = frames.iterator().next();
-        if (Objects.nonNull(result)) {
+            if (Objects.nonNull(result)) {
 
-                    System.out.println("Iniciando frame: " + frame.getPath() + " ...");
-                    Instant start = Instant.now();
-                    calculateNextTimeFrame(result);
-                    frameRepository.save(result);
-                    Instant endCircle = Instant.now();
-                    Duration timeElapsed = Duration.between(start, endCircle);
-                    System.out.println("Finalizado frame: " + frame.getPath() + " - Tempo:  " + timeElapsed.toSeconds() + " segundos");
-                }
+                System.out.println("Iniciando frame: " + frame.getPath() + " ...");
+                Instant start = Instant.now();
+                calculateNextTimeFrame(result);
+                frameRepository.save(result);
+                Instant endCircle = Instant.now();
+                Duration timeElapsed = Duration.between(start, endCircle);
+                System.out.println("Finalizado frame: " + frame.getPath() + " - Tempo:  " + timeElapsed.toSeconds() + " segundos - Next: " + result.getNextTimeFrame());
+            }
             return new ResponseEntity<>(HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -210,12 +210,12 @@ public class FrameController {
         List<Frame> frames = frameRepository.findByPath(request.getPath());
         if (Objects.nonNull(frames) && !frames.isEmpty()) {
             Frame frame = frames.iterator().next();
-                if (Objects.nonNull(frame)) {
-                    List<Frame> neighbors = frameRepository.findAll();
-                    defineNeighborsByMatches(frame, neighbors);
-                }
+            if (Objects.nonNull(frame)) {
+                List<Frame> neighbors = frameRepository.findAll();
+                defineNeighborsByMatches(frame, neighbors);
             }
-            return new ResponseEntity<>(HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     public void defineNeighbors(Frame centralFrame, List<Frame> allNeighbors) {
@@ -445,12 +445,25 @@ public class FrameController {
         return null;
     }
 
-    private Frame getFrameBestMatch(Frame centralFrame, List<Frame> neighbors, SIFT featureDetector, MatOfKeyPoint centralFrameDescriptors) {
+    private Frame getFrameBestMatch2(Frame centralFrame, List<Frame> neighbors, SIFT featureDetector, MatOfKeyPoint centralFrameDescriptors) {
         Iterator<Frame> iterator = neighbors.iterator();
         while (iterator.hasNext()) {
             calculator.setMatchesBetweenFrames(centralFrame, iterator.next(), featureDetector, centralFrameDescriptors);
         }
         neighbors.sort(Comparator.comparing(Frame::getMatches));
+        return neighbors.iterator().next();
+    }
+
+    private Frame getFrameBestMatch(Frame centralFrame, List<Frame> neighbors, SIFT featureDetector, MatOfKeyPoint centralFrameDescriptors) {
+        Iterator<Frame> iterator = neighbors.iterator();
+        while (iterator.hasNext()) {
+            try {
+                calculator.checkSimilarity(centralFrame, iterator.next());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        neighbors.sort(Comparator.comparing(Frame::getPercentual).reversed());
         return neighbors.iterator().next();
     }
 
@@ -612,30 +625,30 @@ public class FrameController {
                 .collect(Collectors.toList());
     }
 
-    public void calculateNextTimeFrame(Frame frame){
-        List<Frame> framesMesmaPosicao = frameRepository.findByPosicaoXAndPosicaoYAndPosicaoZAndAnguloXAndAnguloY(frame.getPosicaoX(),frame.getPosicaoY(),frame.getPosicaoZ(),frame.getAnguloX(),frame.getAnguloY());
+    public void calculateNextTimeFrame(Frame frame) {
+        List<Frame> framesMesmaPosicao = frameRepository.findByPosicaoXAndPosicaoYAndPosicaoZAndAnguloXAndAnguloY(frame.getPosicaoX(), frame.getPosicaoY(), frame.getPosicaoZ(), frame.getAnguloX(), frame.getAnguloY());
         framesMesmaPosicao.sort(Comparator.comparing(Frame::getTime));
 
-        for(Frame fraMP : framesMesmaPosicao){
-            System.out.println(fraMP.getTime() + " - " +  fraMP.getPath());
+        for (Frame fraMP : framesMesmaPosicao) {
+            System.out.println(fraMP.getTime() + " - " + fraMP.getPath());
         }
 
         Frame next = null;
         Iterator<Frame> frameIterator = framesMesmaPosicao.iterator();
-        while (frameIterator.hasNext()){
+        while (frameIterator.hasNext()) {
             Frame control = frameIterator.next();
-            if(control.getPath().equalsIgnoreCase(frame.getPath()) && frameIterator.hasNext()){
-             next = frameIterator.next();
-             break;
+            if (control.getPath().equalsIgnoreCase(frame.getPath()) && frameIterator.hasNext()) {
+                next = frameIterator.next();
+                break;
             }
         }
 
-        if(Objects.isNull(next) || !( next.getTime() - frame.getTime() == 1)){
+        if (Objects.isNull(next) || !(next.getTime() - frame.getTime() == 1)) {
 
             List<Frame> frames = framesMesmaPosicao.stream()//
-             .filter(f -> (f.getTime() > frame.getTime()))//
-                      //&& !(f.getTime() - frame.getTime() == -1))//
-             .collect(Collectors.toList());
+                    .filter(f -> (f.getTime() > frame.getTime()))//
+                    //&& !(f.getTime() - frame.getTime() == -1))//
+                    .collect(Collectors.toList());
 
 
             SIFT featureDetector = SIFT.create();
@@ -647,14 +660,14 @@ public class FrameController {
             featureDetector.compute(objectImage, objectKeyPoints, centralFrameDescriptors);
 
 
-            if(!frames.isEmpty()) {
+            if (!frames.isEmpty()) {
                 next = getFrameBestMatch(frame, frames, featureDetector, centralFrameDescriptors);
-            }else {
+            } else {
                 next = getFrameBestMatch(frame, framesMesmaPosicao, featureDetector, centralFrameDescriptors);
             }
         }
 
-        if(Objects.nonNull(next)) {
+        if (Objects.nonNull(next)) {
             frame.setNextTimeFrame(next.getPath());
         }
 

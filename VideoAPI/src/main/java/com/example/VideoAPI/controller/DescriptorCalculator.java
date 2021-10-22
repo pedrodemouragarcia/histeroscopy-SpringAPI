@@ -1,13 +1,11 @@
 package com.example.VideoAPI.controller;
 
 import com.example.VideoAPI.model.Frame;
-import org.opencv.core.DMatch;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfDMatch;
-import org.opencv.core.MatOfKeyPoint;
+import org.opencv.core.*;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.SIFT;
 import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;
 
 import java.util.*;
 
@@ -157,4 +155,83 @@ public class DescriptorCalculator {
 //            System.out.println("Object Not Found");
 //        }
 
+
+    public void checkSimilarity(Frame frame1, Frame frame2) throws Exception {
+
+        String imageFrame = MAIN_FOLDER.concat(frame1.getPath()).concat(".png");
+        Mat img = Imgcodecs.imread(imageFrame, Imgcodecs.IMREAD_COLOR);
+        String imageOtherFrame = MAIN_FOLDER.concat(frame2.getPath()).concat(".png");
+        Mat templ = Imgcodecs.imread(imageOtherFrame, Imgcodecs.IMREAD_COLOR);
+        int match_method = Imgproc.TM_CCORR_NORMED;
+
+        Mat result = new Mat();
+        Mat img_display = new Mat();
+        img.copyTo(img_display);
+        int result_cols = img.cols() - img.cols() + 1;
+        int result_rows = img.rows() - img.rows() + 1;
+        result.create(result_rows, result_cols, CvType.CV_32FC1);
+
+        Imgproc.matchTemplate(img, templ, result, match_method);
+
+        Core.normalize(result, img_display, 0, 1, Core.NORM_MINMAX, -1, new Mat());
+
+        Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
+        System.out.println(frame2.getPath() + "-  Difference - Max: " + mmr.maxVal + " - Min: " + mmr.minVal);
+        frame2.setPercentual(mmr.maxVal);
+//        Point matchLoc = mmr.minLoc;
+////        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
+////            matchLoc = mmr.minLoc;
+////        } else {
+////            matchLoc = mmr.maxLoc;
+////        }
+//        Imgproc.rectangle(img_display, matchLoc, new Point(matchLoc.x + templ.cols(), matchLoc.y + templ.rows()),
+//                new Scalar(0, 0, 0), 2, 8, 0);
+//        Imgproc.rectangle(result, matchLoc, new Point(matchLoc.x + templ.cols(), matchLoc.y + templ.rows()),
+//                new Scalar(0, 0, 0), 2, 8, 0);
+//        Image tmpImg = HighGui.toBufferedImage(img_display);
+//        ImageIcon icon = new ImageIcon(tmpImg);
+        //imgDisplay.setIcon(icon);
+//        result.convertTo(result, CvType.CV_8UC1, 255.0);
+//        tmpImg = HighGui.toBufferedImage(result);
+//        icon = new ImageIcon(tmpImg);
+        //resultDisplay.setIcon(icon);
+
+//        String imageFrame1 = MAIN_FOLDER.concat(frame1.getPath()).concat(".png");
+//        String imageFrame2 = MAIN_FOLDER.concat(frame2.getPath()).concat(".png");
+//        BufferedImage img1 = ImageIO.read(new File(imageFrame1));
+//        BufferedImage img2 = ImageIO.read(new File(imageFrame2));
+//        int w1 = img1.getWidth();
+//        int w2 = img2.getWidth();
+//        int h1 = img1.getHeight();
+//        int h2 = img2.getHeight();
+//        if ((w1!=w2)||(h1!=h2)) {
+//            System.out.println("Both images should have same dimwnsions");
+//        } else {
+//            long diff = 0;
+//            for (int j = 0; j < h1; j++) {
+//                for (int i = 0; i < w1; i++) {
+//                    //Getting the RGB values of a pixel
+//                    int pixel1 = img1.getRGB(i, j);
+//                    Color color1 = new Color(pixel1, true);
+//                    int r1 = color1.getRed();
+//                    int g1 = color1.getGreen();
+//                    int b1 = color1.getBlue();
+//                    int pixel2 = img2.getRGB(i, j);
+//                    Color color2 = new Color(pixel2, true);
+//                    int r2 = color2.getRed();
+//                    int g2 = color2.getGreen();
+//                    int b2= color2.getBlue();
+//                    //sum of differences of RGB values of the two images
+//                    long data = Math.abs(r1-r2)+Math.abs(g1-g2)+ Math.abs(b1-b2);
+//                    diff = diff+data;
+//                }
+//            }
+//            double avg = diff/(w1*h1*3);
+//            double percentage = (avg/255)*100;
+//            frame2.setPercentual(percentage);
+//            System.out.println("Difference: "+percentage);
+//        }
+    }
+
 }
+

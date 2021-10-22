@@ -52,6 +52,9 @@ public class Frame {
     @Transient
     private Integer matches;
 
+    @Transient
+    private Double percentual;
+
     public String getId() {
         return id;
     }
@@ -258,5 +261,13 @@ public class Frame {
 
     public void setNextTimeFrame(String nextTimeFrame) {
         this.nextTimeFrame = nextTimeFrame;
+    }
+
+    public Double getPercentual() {
+        return  percentual == null ? 0.0 : percentual;
+    }
+
+    public void setPercentual(Double percentual) {
+        this.percentual = percentual;
     }
 }

@@ -47,7 +47,11 @@ public class Frame {
     private String frontSpaceNeighbor;
     private String backSpaceNeighbor;
 
-    private String nextTimeFrame;
+    private String siftNextTimeFrame;
+    private String corrNextTimeFrame;
+
+    private String siftBaseComparison;
+    private String corrBaseComparison;
 
     @Transient
     private Integer matches;
@@ -255,12 +259,20 @@ public class Frame {
         this.backSpaceNeighbor = backSpaceNeighbor;
     }
 
-    public String getNextTimeFrame() {
-        return nextTimeFrame;
+    public String getSiftNextTimeFrame() {
+        return siftNextTimeFrame;
     }
 
-    public void setNextTimeFrame(String nextTimeFrame) {
-        this.nextTimeFrame = nextTimeFrame;
+    public void setSiftNextTimeFrame(String siftNextTimeFrame) {
+        this.siftNextTimeFrame = siftNextTimeFrame;
+    }
+
+    public String getCorrNextTimeFrame() {
+        return corrNextTimeFrame;
+    }
+
+    public void setCorrNextTimeFrame(String corrNextTimeFrame) {
+        this.corrNextTimeFrame = corrNextTimeFrame;
     }
 
     public Double getPercentual() {
@@ -269,5 +281,21 @@ public class Frame {
 
     public void setPercentual(Double percentual) {
         this.percentual = percentual;
+    }
+
+    public String getSiftBaseComparison() {
+        return siftBaseComparison;
+    }
+
+    public void setSiftBaseComparison(String siftBaseComparison) {
+        this.siftBaseComparison = siftBaseComparison;
+    }
+
+    public String getCorrBaseComparison() {
+        return corrBaseComparison;
+    }
+
+    public void setCorrBaseComparison(String corrBaseComparison) {
+        this.corrBaseComparison = corrBaseComparison;
     }
 }

@@ -53,6 +53,8 @@ public class Frame {
     private String siftBaseComparison;
     private String corrBaseComparison;
 
+    private String nextTimeFrame;
+
     @Transient
     private Integer matches;
 
@@ -297,5 +299,13 @@ public class Frame {
 
     public void setCorrBaseComparison(String corrBaseComparison) {
         this.corrBaseComparison = corrBaseComparison;
+    }
+
+    public String getNextTimeFrame() {
+        return nextTimeFrame;
+    }
+
+    public void setNextTimeFrame(String nextTimeFrame) {
+        this.nextTimeFrame = nextTimeFrame;
     }
 }

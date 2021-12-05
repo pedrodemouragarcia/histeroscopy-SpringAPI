@@ -384,7 +384,7 @@ public class FrameController {
             if (Objects.nonNull(neighbor)) {
                 List<Frame> rightAngleNeighbors = getPossibleCircleNeighborsFinalAngle(neighbors, neighbor);
                 if (!rightAngleNeighbors.isEmpty()) {
-                    return getFrameBestMatchSift(centralFrame, rightAngleNeighbors, featureDetector, centralFrameDescriptors);
+                    return getFrameBestGuess(centralFrame, rightAngleNeighbors, featureDetector, centralFrameDescriptors);
                 }
             }
         }
@@ -444,9 +444,39 @@ public class FrameController {
                 .collect(Collectors.toList());
         neighbors.sort(comparing);
         if (!neighbors.isEmpty()) {
-            return getFrameBestMatchSift(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
+            return getFrameBestGuess(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
         }
         return null;
+    }
+
+    private Frame getFrameBestGuess(Frame centralFrame, List<Frame> neighbors, SIFT featureDetector, MatOfKeyPoint centralFrameDescriptors) {
+        Frame bestGuess = null;
+
+        Frame nextSift = getFrameBestMatchSift(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
+        Frame nextCorr = getFrameBestMatchCorr(centralFrame, neighbors);
+
+        if (Objects.nonNull(nextCorr)) {
+            bestGuess = nextCorr;
+        }
+
+        if (Objects.nonNull(nextSift)) {
+            bestGuess = nextSift;
+        }
+
+        if (Objects.nonNull(nextSift)//
+                && Objects.nonNull(nextCorr)//
+                && nextSift.getTime() != nextCorr.getTime()) {
+
+            if (nextSift.getTime() < nextCorr.getTime()) {
+                bestGuess = nextSift;
+                System.out.println("Sift best guess");
+            } else {
+                bestGuess = nextCorr;
+                System.out.println("Corr best guess");
+            }
+        }
+
+        return bestGuess;
     }
 
     private Frame getFrameBestMatchSift(Frame centralFrame, List<Frame> neighbors, SIFT featureDetector, MatOfKeyPoint centralFrameDescriptors) {
@@ -530,7 +560,7 @@ public class FrameController {
                 .collect(Collectors.toList());
         neighbors.sort(comparing);
         if (!neighbors.isEmpty()) {
-            return getFrameBestMatchSift(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
+            return getFrameBestGuess(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
         }
         return null;
     }
@@ -586,7 +616,7 @@ public class FrameController {
                 .collect(Collectors.toList());
         neighbors.sort(comparing);
         if (!neighbors.isEmpty()) {
-            return getFrameBestMatchSift(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
+            return getFrameBestGuess(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
         }
         return null;
     }
@@ -684,12 +714,22 @@ public class FrameController {
 
         if (Objects.nonNull(nextSift)) {
             frame.setSiftNextTimeFrame(nextSift.getPath());
+            frame.setNextTimeFrame(nextSift.getPath());
         }
 
         if (Objects.nonNull(nextCorr)) {
             frame.setCorrNextTimeFrame(nextCorr.getPath());
         }
 
+        if (Objects.nonNull(nextSift)//
+                && Objects.nonNull(nextCorr)//
+                && nextSift.getTime() != nextCorr.getTime()) {
 
+            if (nextSift.getTime() < nextCorr.getTime()) {
+                frame.setNextTimeFrame(nextSift.getPath());
+            } else {
+                frame.setNextTimeFrame(nextCorr.getPath());
+            }
+        }
     }
 }

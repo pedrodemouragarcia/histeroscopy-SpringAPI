@@ -453,28 +453,28 @@ public class FrameController {
         Frame bestGuess = null;
 
         Frame nextSift = getFrameBestMatchSift(centralFrame, neighbors, featureDetector, centralFrameDescriptors);
-        Frame nextCorr = getFrameBestMatchCorr(centralFrame, neighbors);
+        //Frame nextCorr = getFrameBestMatchCorr(centralFrame, neighbors);
 
-        if (Objects.nonNull(nextCorr)) {
-            bestGuess = nextCorr;
-        }
+   //     if (Objects.nonNull(nextCorr)) {
+    //        bestGuess = nextCorr;
+    //    }
 
         if (Objects.nonNull(nextSift)) {
             bestGuess = nextSift;
         }
 
-        if (Objects.nonNull(nextSift)//
-                && Objects.nonNull(nextCorr)//
-                && nextSift.getTime() != nextCorr.getTime()) {
-
-            if (nextSift.getTime() < nextCorr.getTime()) {
-                bestGuess = nextSift;
-                System.out.println("Sift best guess");
-            } else {
-                bestGuess = nextCorr;
-                System.out.println("Corr best guess");
-            }
-        }
+//        if (Objects.nonNull(nextSift)//
+//                && Objects.nonNull(nextCorr)//
+//                && nextSift.getTime() != nextCorr.getTime()) {
+//
+//            if (nextSift.getTime() < nextCorr.getTime()) {
+//                bestGuess = nextSift;
+//                System.out.println("Sift best guess");
+//            } else {
+//                bestGuess = nextCorr;
+//                System.out.println("Corr best guess");
+//            }
+//        }
 
         return bestGuess;
     }

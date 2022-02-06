@@ -11,7 +11,7 @@ import java.util.*;
 
 public class DescriptorCalculator {
 
-    public static final String MAIN_FOLDER = "D:/GitHub/histeroscopy-Unity/Video/";
+    public static final String MAIN_FOLDER = "C:/Users/pedro/Documents/GitHub/histeroscopy-Unity/Video/";
     private Map<String, Integer> matchesMap = new HashMap<>();
     private Map<String, MatOfKeyPoint> descriptorsMap = new HashMap<>();
 
